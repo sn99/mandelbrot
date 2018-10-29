@@ -1,14 +1,12 @@
 extern crate num;
+extern crate image;
+extern crate crossbeam;
 
 use num::Complex;
-
-extern crate image;
-
 use image::{png::PNGEncoder, ColorType};
 
-use std::{fs::File, str::FromStr, io::Write};
+use std::{fs::File, io::Write, str::FromStr};
 
-#[allow(dead_code)]
 fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     let mut z = Complex { re: 0.0, im: 0.0 };
     for i in 0..limit {
@@ -21,7 +19,6 @@ fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     None
 }
 
-#[allow(dead_code)]
 fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
     match s.find(separator) {
         None => None,
@@ -32,7 +29,6 @@ fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
     }
 }
 
-#[allow(dead_code)]
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
     match parse_pair(s, ',') {
         Some((re, im)) => Some(Complex { re, im }),
@@ -40,7 +36,6 @@ fn parse_complex(s: &str) -> Option<Complex<f64>> {
     }
 }
 
-#[allow(dead_code)]
 fn pixel_to_point(
     bounds: (usize, usize),
     pixel: (usize, usize),
@@ -58,14 +53,13 @@ fn pixel_to_point(
     }
 }
 
-#[allow(dead_code)]
 fn render(
     pixels: &mut [u8],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
 ) {
-    assert!(pixels.len() == bounds.0 * bounds.1);
+    assert_eq!(pixels.len(), bounds.0 * bounds.1);
 
     for row in 0..bounds.1 {
         for column in 0..bounds.0 {
@@ -79,7 +73,6 @@ fn render(
     }
 }
 
-#[allow(dead_code)]
 fn write_image(
     filename: &str,
     pixels: &[u8],
@@ -102,8 +95,15 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 5 {
-        writeln!(std::io::stderr(), "Usage: mandelbrot FILE PIXELS UPPERLEFT LOWERRIGHT").unwrap();
-        writeln!(std::io::stderr(), "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20", args[0]).unwrap();
+        writeln!(
+            std::io::stderr(),
+            "Usage: mandelbrot FILE PIXELS UPPERLEFT LOWERRIGHT"
+        ).unwrap();
+        writeln!(
+            std::io::stderr(),
+            "Example: {} mandel.png 1000x750 -1.20,0.35 -1,0.20",
+            args[0]
+        ).unwrap();
 
         std::process::exit(1);
     }
