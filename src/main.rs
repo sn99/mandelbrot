@@ -7,9 +7,12 @@ use num::Complex;
 
 use std::{fs::File, io::Write, str::FromStr};
 
+// determining if 'c' is in Mandelbrot set, using at most limit iterations(loops) to decide
 fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     let mut z = Complex { re: 0.0, im: 0.0 };
     for i in 0..limit {
+        // if c is greater than 0.25, or less than -2.0, then x will eventually becomes infinitely
+        // large or it approaches zero
         z = z * z + c;
         if z.norm_sqr() > 4.0 {
             return Some(i);
@@ -19,6 +22,7 @@ fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     None
 }
 
+// input in form <left><separator><right>
 fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
     match s.find(separator) {
         None => None,
@@ -29,6 +33,13 @@ fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
     }
 }
 
+// given the row and column of pixel in the the output image, return the corresponding point on the
+// complex plane
+//
+// 'bounds' is a pair giving the width and height of the image in pixels
+// 'pixel' is a (column, row) pair indicating a particular pixel in that image
+// the 'upper_left' and 'lower_right' parameters are points on the complex plane designating the
+// area our image covers
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
     match parse_pair(s, ',') {
         Some((re, im)) => Some(Complex { re, im }),
@@ -53,6 +64,10 @@ fn pixel_to_point(
     }
 }
 
+// render a rectangle of Mandelbrot set into a buffer of pixels
+//
+// the 'bounds' argument gives the width and height of the buffer 'pixels', which holds one
+// greyscale pixel per byte
 fn render(
     pixels: &mut [u8],
     bounds: (usize, usize),
@@ -65,6 +80,7 @@ fn render(
         for column in 0..bounds.0 {
             let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
 
+            // use of 255 because of max of u8 is 255
             pixels[row * bounds.0 + column] = match escape_time(point, 255) {
                 None => 0,
                 Some(count) => 255 - count as u8,
@@ -73,6 +89,7 @@ fn render(
     }
 }
 
+// write the buffer 'pixels', whose dimensions are given by 'bounds', to the file named 'filename'
 fn write_image(
     filename: &str,
     pixels: &[u8],
@@ -114,6 +131,7 @@ fn main() {
 
     let mut pixels = vec![0; bounds.0 * bounds.1];
 
+    // render(&mut pixels, bounds, upper_left, lower_right);
     let threads = 8;
     let rows_per_band = bounds.1 / threads + 1;
 
@@ -142,7 +160,12 @@ fn main() {
 #[test]
 fn test_parse_pair() {
     assert_eq!(parse_pair::<i32>("", ','), None);
+    assert_eq!(parse_pair::<i32>("10,", ','), None);
+    assert_eq!(parse_pair::<i32>(",10", ','), None);
     assert_eq!(parse_pair::<i32>("10,20", ','), Some((10, 20)));
+    assert_eq!(parse_pair::<i32>("10,20xy", ','), None);
+    assert_eq!(parse_pair::<f64>("6.9x", 'x'), None);
+    assert_eq!(parse_pair::<f64>("1.2x8.9", 'x'), Some((1.2, 8.9)));
 }
 
 #[test]
