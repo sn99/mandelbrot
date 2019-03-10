@@ -1,9 +1,11 @@
 [package]
 name = "mandelbrot"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["sn99 <siddharthn.099@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-num = "*"
-image = "*"
-crossbeam = "*"
+num = "0.2.0"
+image = "0.21.0"
+crossbeam = "0.7.1"
+rayon = "1.0.3"
